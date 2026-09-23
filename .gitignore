@@ -1,0 +1,23 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.idea/
+*.iml
+windows/flutter/ephemeral/
+android/.gradle/
+ios/Pods/
+macos/Pods/
+
+# Artefactos de distribuicao (tool/package.ps1)
+dist/
+
+# Sistema
+*.log
+.DS_Store
+Thumbs.db
+
+# opencode local state
+.local/

@@ -1,0 +1,10 @@
+# Os scripts de shell correm no WSL/Linux: forçar LF para o bash não falhar.
+*.sh text eol=lf
+tool/linux/*.sh text eol=lf
+
+# Ficheiros nativos (não normalizar).
+*.png binary
+*.ico binary
+*.ttf binary
+*.zip binary
+*.tar.gz binary

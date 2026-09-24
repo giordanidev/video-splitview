@@ -37,6 +37,13 @@ $release = Join-Path $root 'build\windows\x64\runner\Release'
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
+# Manifesto de update: inclui-o nos artefactos para ser anexado a release
+# (lido pela verificacao em update_service.dart).
+$versionJson = Join-Path $root 'version.json'
+if (Test-Path $versionJson) {
+  Copy-Item -Path $versionJson -Destination (Join-Path $dist 'version.json') -Force
+}
+
 # 2) Portable (pasta auto-contida + READ-ME).
 $portableDir = Join-Path $env:TEMP "$artifactBase-portable"
 Remove-Item $portableDir -Recurse -Force -ErrorAction SilentlyContinue

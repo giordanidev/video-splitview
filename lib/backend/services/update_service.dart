@@ -1,10 +1,20 @@
-/// Verificação de atualizações via GitHub Releases + abertura de URLs.
+/// Verificação de atualizações via `version.json` + abertura de URLs.
 ///
-/// Sem dependências externas: usa `dart:io` (HttpClient) para consultar a API
-/// pública de releases e o gestor de URLs do sistema para abrir a página de
-/// download. Não descarrega nem instala nada — apenas informa e liga.
+/// Sem dependências externas: usa `dart:io` (HttpClient). A versão mais recente
+/// é lida de várias fontes por ordem de prioridade (a primeira que responder
+/// vence), de modo que a verificação continua a funcionar mesmo quando uma está
+/// indisponível:
+///   1. `releases/latest/download/version.json` — asset da release mais recente.
+///      O GitHub redireciona este URL sem chamar a API REST, logo não está
+///      sujeito ao limite de 60 pedidos/hora por IP (a fonte preferida).
+///   2. jsDelivr (CDN) a servir o `version.json` do ramo `main`.
+///   3. raw.githubusercontent.com do ramo `main`.
+///   4. API REST de releases do GitHub (último recurso, limitada por IP).
+///
+/// Não descarrega nem instala nada — apenas informa e abre a página de releases.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -16,6 +26,18 @@ const String appRepoName = 'video-splitview';
 const String appRepoUrl = 'https://github.com/$appRepoOwner/$appRepoName';
 const String appReleasesUrl = '$appRepoUrl/releases';
 
+/// Asset da release mais recente: o GitHub redireciona sem chamar a API REST,
+/// pelo que não está sujeito ao limite de pedidos por IP.
+const String _releaseAssetUrl =
+    '$appRepoUrl/releases/latest/download/version.json';
+
+/// Mesmo ficheiro publicado no ramo `main`, servido por CDN e, em seguida, cru.
+const List<String> _versionJsonUrls = [
+  'https://cdn.jsdelivr.net/gh/$appRepoOwner/$appRepoName@main/version.json',
+  'https://raw.githubusercontent.com/$appRepoOwner/$appRepoName/main/version.json',
+];
+
+/// Último recurso: a API REST de releases (limitada a 60 pedidos/hora por IP).
 const String _latestReleaseApiUrl =
     'https://api.github.com/repos/$appRepoOwner/$appRepoName/releases/latest';
 
@@ -89,7 +111,30 @@ String? normalizeVersion(String? tag) {
   return match?.group(0);
 }
 
-/// Consulta a última release publicada no GitHub.
+/// Lê a versão de um payload JSON (`version` no `version.json`, `tag_name` na API).
+String? _versionFromPayload(Object? data) {
+  if (data is! Map) return null;
+  final raw = data['version'] ?? data['tag_name'];
+  return normalizeVersion(raw?.toString());
+}
+
+/// Lê o URL de release de um payload JSON, se presente.
+String? _releaseUrlFromPayload(Object? data) {
+  if (data is! Map) return null;
+  final raw = data['releaseUrl'] ?? data['html_url'];
+  if (raw is String && raw.trim().isNotEmpty) return raw.trim();
+  return null;
+}
+
+/// Uma versão obtida de uma fonte, com o respetivo URL de release (opcional).
+class _SourceResult {
+  const _SourceResult(this.version, this.releaseUrl);
+
+  final String version;
+  final String? releaseUrl;
+}
+
+/// Consulta a última versão publicada, com fallback entre várias fontes.
 class UpdateService {
   UpdateService({HttpClient? client}) : _client = client ?? HttpClient();
 
@@ -97,47 +142,79 @@ class UpdateService {
 
   static const Duration _timeout = Duration(seconds: 8);
 
-  Future<UpdateCheck> check() async {
+  UpdateCheck? _cached;
+  Future<UpdateCheck>? _inFlight;
+
+  /// Devolve o resultado do cache quando disponível; caso contrário consulta.
+  ///
+  /// Com [force] a true ignora o cache (botão "Verificar atualizações").
+  /// Chamadas concorrentes partilham a mesma consulta em curso.
+  Future<UpdateCheck> check({bool force = false}) {
+    if (!force && _cached != null && _cached!.phase != UpdatePhase.failed) {
+      return Future.value(_cached!);
+    }
+    final pending = _inFlight;
+    if (pending != null) return pending;
+
+    final future = _runCheck();
+    _inFlight = future;
+    return future.whenComplete(() => _inFlight = null);
+  }
+
+  Future<UpdateCheck> _runCheck() async {
     final current = appVersion;
+    var lastError = 'sem resposta';
+    for (final url in [
+      _releaseAssetUrl,
+      ..._versionJsonUrls,
+      _latestReleaseApiUrl,
+    ]) {
+      final result = await _fetchVersion(url);
+      if (result != null) {
+        final check = UpdateCheck(
+          phase: compareVersions(result.version, current) > 0
+              ? UpdatePhase.available
+              : UpdatePhase.upToDate,
+          currentVersion: current,
+          latestVersion: result.version,
+          releaseUrl: result.releaseUrl ?? appReleasesUrl,
+        );
+        _cached = check;
+        return check;
+      }
+      lastError = 'sem versão em $url';
+    }
+    // Falhas não são cacheadas: a próxima verificação volta a tentar.
+    return UpdateCheck.failed(current, lastError);
+  }
+
+  /// Procura uma versão num URL, devolvendo `null` em qualquer falha.
+  Future<_SourceResult?> _fetchVersion(String url) async {
     try {
       final request = await _client
-          .getUrl(Uri.parse(_latestReleaseApiUrl))
+          .getUrl(Uri.parse(url))
           .timeout(_timeout);
-      request.headers.set(HttpHeaders.userAgentHeader, 'VideoSplitview/$current');
       request.headers.set(
-          HttpHeaders.acceptHeader, 'application/vnd.github+json');
+          HttpHeaders.userAgentHeader, 'VideoSplitview/$appVersion');
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
 
       final response = await request.close().timeout(_timeout);
+      if (response.statusCode != HttpStatus.ok) {
+        // Consome o corpo para libertar a ligação antes de desistir.
+        await response.drain<void>();
+        return null;
+      }
+
       final body = await response
           .transform(utf8.decoder)
           .join()
           .timeout(_timeout);
-
-      if (response.statusCode != HttpStatus.ok) {
-        return UpdateCheck.failed(current, 'HTTP ${response.statusCode}');
-      }
-
       final decoded = jsonDecode(body);
-      if (decoded is! Map) {
-        return UpdateCheck.failed(current, 'resposta inesperada');
-      }
-
-      final latest = normalizeVersion(decoded['tag_name']?.toString());
-      if (latest == null) {
-        return UpdateCheck.failed(current, 'tag sem versão');
-      }
-
-      final htmlUrl = decoded['html_url']?.toString();
-      return UpdateCheck(
-        phase: compareVersions(latest, current) > 0
-            ? UpdatePhase.available
-            : UpdatePhase.upToDate,
-        currentVersion: current,
-        latestVersion: latest,
-        releaseUrl: htmlUrl ?? appReleasesUrl,
-      );
-    } catch (error) {
-      return UpdateCheck.failed(current, error.toString());
+      final version = _versionFromPayload(decoded);
+      if (version == null) return null;
+      return _SourceResult(version, _releaseUrlFromPayload(decoded));
+    } catch (_) {
+      return null;
     }
   }
 

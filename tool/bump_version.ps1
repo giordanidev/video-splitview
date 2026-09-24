@@ -7,6 +7,7 @@
 # Regras:
 #   - pubspec.yaml "version: 0.0.PATCH+BUILD" -> PATCH+1 e BUILD+1
 #   - lib/generated/version.dart recebe appVersion='0.0.PATCH' e appCommit=<sha curto>
+#   - version.json (manifesto de update) recebe version + releaseUrl
 param(
   [switch]$NoBump
 )
@@ -15,6 +16,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $pubspecPath = Join-Path $root 'pubspec.yaml'
 $versionDartPath = Join-Path $root 'lib\backend\generated\version.dart'
+$versionJsonPath = Join-Path $root 'version.json'
 
 $content = Get-Content -LiteralPath $pubspecPath -Raw
 $match = [regex]::Match($content, 'version:\s*(\d+)\.(\d+)\.(\d+)\+(\d+)')
@@ -53,5 +55,16 @@ $lines = @(
   ''
 )
 [IO.File]::WriteAllText($versionDartPath, ($lines -join "`n"))
+
+# Manifesto de atualizacao: publicado como asset da release e servido pela CDN
+# a partir do ramo main. Lido pela verificacao de updates (update_service.dart).
+$versionJson = @(
+  '{',
+  "  `"version`": `"$appVersion`",",
+  '  "releaseUrl": "https://github.com/giordanidev/video-splitview/releases"',
+  '}',
+  ''
+)
+[IO.File]::WriteAllText($versionJsonPath, ($versionJson -join "`n"))
 
 Write-Output "Versao: v$appVersion ($commit) | pubspec: $newVersion"

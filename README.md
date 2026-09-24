@@ -1,10 +1,14 @@
 
 
+<div align="center">
+
 # Video Splitview
 
 **Side by side, frame by frame.**
 
 ![Video Splitview icon](assets/icon/video_splitview.png)
+
+</div>
 
 
 
@@ -13,11 +17,19 @@ Desktop video comparison for Windows and Linux, **100% Flutter**, powered by the
 and every video are composed in the same Flutter scene, with no overlapping native
 layers.
 
+
+
+## Why Video Splitview?
+
+I was using AI to try and improve Aion Online's old cutscene videos and couldn't find a proper software to compare them. So why not?!
+
+
+
 ## Screenshots
 
 | | |
 | --- | --- |
-| **Three videos · side by side** | **Three videos · two on top, one below** |
+| **Three videos · side by side** | **Three videos · one on top, two below** |
 | ![Three videos side by side](docs/images/3_videos_side.png) | ![Three videos, two on top and one below](docs/images/3_videos_top.png) |
 | **Four videos · one view** | **Settings** |
 | ![Four videos in one view](docs/images/4_full.png) | ![Settings and options](docs/images/options.png) |
@@ -129,11 +141,17 @@ be captured with a `RepaintBoundary`).
 - **Fullscreen** with `F`/`F11`; `Esc` exits fullscreen or closes the open modal.
 - **Reactive i18n**: Português (pt-BR), English (en-US), Español (es-ES) — switching
 is instant and applies to the whole app.
-- **Update check**: queries the latest GitHub Release in the background on startup.
-Settings shows the current version, the status, a **Check for updates** button,
-and — when an update exists — a **Download update** link. The settings button also
-shows a small badge. Nothing is downloaded or installed automatically; it only
-informs and opens the release page.
+- **Update check**: reads the latest version from `version.json` in the background on
+startup. Several sources are tried in order — the release asset
+(`releases/latest/download/version.json`), the jsDelivr CDN and raw `main`, and
+finally the GitHub Releases API — so it keeps working even if one is unavailable.
+Settings shows the current version, the status, and buttons to **open releases**,
+**check** again and — when an update exists — **update**. The settings button also
+shows a small badge. The **update** button downloads the matching release asset
+(the Windows installer, or the AppImage on Linux) and applies it: on Windows it
+launches the installer and quits so the files can be replaced; on Linux the
+AppImage is swapped in place and relaunched. Nothing is applied without pressing
+**update**.
 - Instant tooltips and a custom dark theme (Inter + JetBrains Mono, bundled).
 
 

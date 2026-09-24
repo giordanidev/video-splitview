@@ -8,6 +8,7 @@ import '../../backend/generated/version.dart';
 import '../../backend/i18n/strings.dart';
 import '../../backend/models/models.dart';
 import '../../backend/services/update_service.dart';
+import '../../backend/services/updater_service.dart';
 import '../../backend/state/providers.dart';
 import '../../backend/state/settings.dart';
 import '../../backend/state/update.dart';
@@ -48,116 +49,6 @@ class SettingsModal extends ConsumerWidget {
           },
         ),
         const Divider(color: AppColors.line),
-        _Section(strings.sectionViews),
-        _ViewCountRow(
-          strings: strings,
-          value: settings.effectiveViewCount,
-          onChanged: (value) => notifier.mutate((s) => s.withViewCount(value)),
-        ),
-        if (settings.effectiveViewCount >= 2) ...[
-          const SizedBox(height: 16),
-          _Section(strings.sectionView),
-          Row(
-            children: [
-              Expanded(
-                child: _Choice(
-                  title: strings.wipe,
-                  hint: strings.wipeHint,
-                  selected:
-                      settings.splitMode == SplitMode.wipe && !settings.blinkEnabled,
-                  onTap: () =>
-                      notifier.mutate((s) => s.copyWith(splitMode: SplitMode.wipe)),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _Choice(
-                  title: strings.columns,
-                  hint: strings.columnsHint,
-                  selected: settings.splitMode == SplitMode.columns &&
-                      !settings.blinkEnabled,
-                  onTap: () =>
-                      notifier.mutate((s) => s.copyWith(splitMode: SplitMode.columns)),
-                ),
-              ),
-            ],
-          ),
-        ],
-        if (settings.effectiveViewCount >= 2) ...[
-          const SizedBox(height: 16),
-          _Section(strings.sectionOrientation),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final layout
-                  in SplitLayout.forViewCount(settings.effectiveViewCount))
-                _LayoutChoice(
-                  layout: layout,
-                  label: layoutName(layout, strings),
-                  selected: settings.effectiveLayout == layout,
-                  onTap: () => notifier.mutate((s) => s.withLayout(layout)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Rotacionar/Girar: só ícone, canto direito, logo abaixo dos layouts.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SVIconButton(
-                size: 34,
-                tooltip: strings.rotateFrames,
-                onPressed: () =>
-                    ref.read(playbackBridgeProvider).rotateVideoPositions(),
-                child: const Icon(Icons.rotate_right),
-              ),
-              const SizedBox(width: 8),
-              SVIconButton(
-                size: 34,
-                tooltip: strings.rotateVideos,
-                onPressed: () =>
-                    ref.read(playbackBridgeProvider).rotateAllVideos(),
-                child: const Icon(Icons.rotate_90_degrees_cw),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _SwitchRow(
-            label: strings.blinkToggle,
-            value: settings.blinkEnabled,
-            onChanged: (value) =>
-                notifier.mutate((s) => s.copyWith(blinkEnabled: value)),
-          ),
-          _SliderRow(
-            label: strings.blinkInterval,
-            valueLabel: '${settings.blinkIntervalMs} ms',
-            value: settings.blinkIntervalMs.toDouble(),
-            min: blinkMinMs.toDouble(),
-            max: blinkMaxMs.toDouble(),
-            divisions: (blinkMaxMs - blinkMinMs) ~/ 10,
-            onChanged: (value) =>
-                notifier.mutate((s) => s.copyWith(blinkIntervalMs: value.round())),
-          ),
-          _PositionRow(
-            strings: strings,
-            value: settings.blinkLetterPosition,
-            onChanged: (value) =>
-                notifier.mutate((s) => s.copyWith(blinkLetterPosition: value)),
-          ),
-        ],
-        const SizedBox(height: 16),
-        _SliderRow(
-          label: strings.holdSpeed,
-          valueLabel: '${settings.holdSpeedPercent}%',
-          value: settings.holdSpeedPercent.toDouble(),
-          min: 10,
-          max: 100,
-          divisions: 18,
-          onChanged: (value) =>
-              notifier.mutate((s) => s.copyWith(holdSpeedPercent: value.round())),
-        ),
-        const Divider(color: AppColors.line),
         _Section(strings.sectionHud),
         _HudAxisRow<HudVPos>(
           label: strings.hudVerticalLabel,
@@ -184,14 +75,25 @@ class SettingsModal extends ConsumerWidget {
               notifier.mutate((s) => s.copyWith(hudHorizontal: value)),
         ),
         _SwitchRow(
+          label: strings.statsOverlay,
+          value: settings.statsOverlay,
+          onChanged: (value) => notifier.mutate((s) => s.copyWith(statsOverlay: value)),
+        ),
+        _SwitchRow(
           label: strings.fpsAlways,
           value: settings.fpsAlways,
           onChanged: (value) => notifier.mutate((s) => s.copyWith(fpsAlways: value)),
         ),
         _SwitchRow(
-          label: strings.statsOverlay,
-          value: settings.statsOverlay,
-          onChanged: (value) => notifier.mutate((s) => s.copyWith(statsOverlay: value)),
+          label: strings.driftMeter,
+          value: settings.driftMeter,
+          onChanged: (value) => notifier.mutate((s) => s.copyWith(driftMeter: value)),
+        ),
+        _SwitchRow(
+          label: strings.bufferIndicator,
+          value: settings.bufferIndicator,
+          onChanged: (value) =>
+              notifier.mutate((s) => s.copyWith(bufferIndicator: value)),
         ),
         const Divider(color: AppColors.line),
         _Section(strings.sectionPerf),
@@ -245,11 +147,6 @@ class SettingsModal extends ConsumerWidget {
           },
           onChanged: (value) => notifier.mutate((s) => s.copyWith(bufferProfile: value)),
         ),
-        _SwitchRow(
-          label: strings.bufferIndicator,
-          value: settings.bufferIndicator,
-          onChanged: (value) => notifier.mutate((s) => s.copyWith(bufferIndicator: value)),
-        ),
         const Divider(color: AppColors.line),
         _Section(strings.sectionPlayback),
         _DropdownRow<int>(
@@ -262,10 +159,15 @@ class SettingsModal extends ConsumerWidget {
           },
           onChanged: (value) => notifier.mutate((s) => s.copyWith(frameStepCount: value)),
         ),
-        _SwitchRow(
-          label: strings.driftMeter,
-          value: settings.driftMeter,
-          onChanged: (value) => notifier.mutate((s) => s.copyWith(driftMeter: value)),
+        _SliderRow(
+          label: strings.holdSpeed,
+          valueLabel: '${settings.holdSpeedPercent}%',
+          value: settings.holdSpeedPercent.toDouble(),
+          min: 10,
+          max: 100,
+          divisions: 18,
+          onChanged: (value) =>
+              notifier.mutate((s) => s.copyWith(holdSpeedPercent: value.round())),
         ),
         const SizedBox(height: 4),
         Text(
@@ -333,9 +235,19 @@ class _UpdatesSection extends ConsumerWidget {
       _ => (strings.updateChecking, AppColors.muted),
     };
 
-    final result = check.value;
-    final available = result?.hasUpdate ?? false;
-    final releaseUrl = result?.releaseUrl ?? appReleasesUrl;
+    final available = check.value?.hasUpdate ?? false;
+
+    final install = ref.watch(updateInstallProvider);
+    final installer = ref.read(updateInstallProvider.notifier);
+    final installing = install.isBusy;
+
+    final installLabel = switch (install.phase) {
+      UpdateInstallPhase.downloading => install.progress > 0
+          ? '${strings.updateDownloading} ${(install.progress * 100).round()}%'
+          : strings.updateDownloading,
+      UpdateInstallPhase.installing => strings.updateInstalling,
+      _ => strings.updateInstall,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -346,24 +258,35 @@ class _UpdatesSection extends ConsumerWidget {
           statusText,
           style: TextStyle(fontSize: 12, color: statusColor, height: 1.3),
         ),
+        if (install.phase == UpdateInstallPhase.failed) ...[
+          const SizedBox(height: 4),
+          Text(
+            strings.updateInstallFailed,
+            style: const TextStyle(
+                fontSize: 12, color: AppColors.accent, height: 1.3),
+          ),
+        ],
         const SizedBox(height: 10),
         Wrap(
+          alignment: WrapAlignment.end,
           spacing: 8,
           runSpacing: 8,
           children: [
             SVTextButton(
-              label: checking ? strings.updateChecking : strings.updateCheckNow,
-              onPressed: checking ? null : () => controller.recheck(),
-            ),
-            if (available)
-              SVTextButton(
-                label: strings.updateDownload,
-                primary: true,
-                onPressed: () => openExternalUrl(releaseUrl),
-              ),
-            SVTextButton(
               label: strings.updateOpenReleases,
-              onPressed: () => openExternalUrl(appReleasesUrl),
+              onPressed: installing ? null : () => openExternalUrl(appReleasesUrl),
+            ),
+            SVTextButton(
+              label: checking ? strings.updateChecking : strings.updateCheckNow,
+              onPressed:
+                  (checking || installing) ? null : () => controller.recheck(),
+            ),
+            SVTextButton(
+              label: installLabel,
+              primary: true,
+              onPressed: (available && !installing)
+                  ? () => installer.install()
+                  : null,
             ),
           ],
         ),
@@ -388,49 +311,6 @@ class _Section extends StatelessWidget {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.8,
           color: AppColors.muted,
-        ),
-      ),
-    );
-  }
-}
-
-class _Choice extends StatelessWidget {
-  const _Choice({
-    required this.title,
-    required this.hint,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String hint;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      mouseCursor: SystemMouseCursors.click,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: selected ? AppColors.accentSoft : Colors.white.withValues(alpha: 0.02),
-          border: Border.all(
-            color: selected ? AppColors.accent : AppColors.line,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title,
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 2),
-            Text(hint,
-                style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
-          ],
         ),
       ),
     );
@@ -563,69 +443,6 @@ class _SwitchRow extends StatelessWidget {
   }
 }
 
-/// Seletor segmentado da posição vertical das letras do Blink.
-class _PositionRow extends StatelessWidget {
-  const _PositionRow({
-    required this.strings,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final Strings strings;
-  final BlinkLetterPosition value;
-  final ValueChanged<BlinkLetterPosition> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(strings.letterPosition, style: const TextStyle(fontSize: 13)),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: AppColors.line),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _seg(strings.posTop, BlinkLetterPosition.top),
-                _seg(strings.posCenter, BlinkLetterPosition.center),
-                _seg(strings.posBottom, BlinkLetterPosition.bottom),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _seg(String label, BlinkLetterPosition option) {
-    final selected = value == option;
-    return InkWell(
-      onTap: () => onChanged(option),
-      mouseCursor: SystemMouseCursors.click,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accentSoft : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: selected ? AppColors.text : AppColors.muted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Seletor segmentado de um eixo da posição das informações (HUD) — linhas
 /// verticais e horizontais independentes.
 class _HudAxisRow<T> extends StatelessWidget {
@@ -681,123 +498,6 @@ class _HudAxisRow<T> extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             color: selected ? AppColors.text : AppColors.muted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Seletor segmentado do número de vídeos visíveis (1..4).
-class _ViewCountRow extends StatelessWidget {
-  const _ViewCountRow({
-    required this.strings,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final Strings strings;
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(strings.sectionViews, style: const TextStyle(fontSize: 13)),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: AppColors.line),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final count in const [1, 2, 3, 4])
-                  _seg(viewCountLabel(count, strings), count),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _seg(String label, int option) {
-    final selected = value == option;
-    return InkWell(
-      onTap: () => onChanged(option),
-      mouseCursor: SystemMouseCursors.click,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accentSoft : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: selected ? AppColors.text : AppColors.muted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Chip de escolha de um layout de divisão ( Wrap da secção de layouts),
-/// com mini-previsualização desenhada.
-class _LayoutChoice extends StatelessWidget {
-  const _LayoutChoice({
-    required this.layout,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final SplitLayout layout;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      mouseCursor: SystemMouseCursors.click,
-      borderRadius: BorderRadius.circular(10),
-      child: SizedBox(
-        width: 96,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.accentSoft : Colors.white.withValues(alpha: 0.02),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected ? AppColors.accent : AppColors.line,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              LayoutPreview(layout: layout, selected: selected),
-              const SizedBox(height: 5),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: selected ? AppColors.text : AppColors.muted,
-                ),
-              ),
-            ],
           ),
         ),
       ),

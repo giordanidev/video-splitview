@@ -277,7 +277,6 @@ class _StageState extends ConsumerState<Stage> {
                                 settings,
                                 strings,
                                 size,
-                                horizontal,
                                 cells,
                                 active,
                                 wipeOn: wipeOn,
@@ -805,14 +804,12 @@ class _StageState extends ConsumerState<Stage> {
     AppSettings settings,
     Strings strings,
     Size size,
-    bool horizontal,
     Map<Side, CellRect> cells,
     List<Side> active, {
     required bool wipeOn,
   }) {
     final showFps = settings.fpsAlways || bridge.frameHudVisible;
     final blockH = settings.statsOverlay ? _statsHeight : _hudHeight;
-    final twoVideo = active.length == 2;
     var loadedCount = 0;
     for (final side in active) {
       if (bridge.stateOf(side).loaded) loadedCount++;
@@ -889,7 +886,7 @@ class _StageState extends ConsumerState<Stage> {
 
     if (showDrift) {
       final drift = _DriftPill(ms: bridge.driftMs);
-      final pos = _avoidDrift(size, occupied, horizontal, cells, twoVideo);
+      final pos = _avoidDrift(size, occupied);
       widgets.add(Positioned(
         left: pos.dx,
         top: pos.dy,
@@ -900,34 +897,18 @@ class _StageState extends ConsumerState<Stage> {
     return widgets;
   }
 
-  /// Escolhe uma posição para a pill de desync que não colida com os grupos:
-  /// começa na posição preferida e, se preciso, desce e depois sobe.
-  Offset _avoidDrift(
-    Size size,
-    List<Rect> occupied,
-    bool horizontal,
-    Map<Side, CellRect> cells,
-    bool twoVideo,
-  ) {
+  /// Posiciona a pill de desync centrada na parte de baixo do view e, se essa
+  /// zona estiver ocupada por um grupo do HUD, sobe (e depois desce) até
+  /// encontrar espaço livre.
+  Offset _avoidDrift(Size size, List<Rect> occupied) {
     const step = _driftHeight + _pillGap;
-    double baseX;
-    double baseY;
-    if (twoVideo && !horizontal) {
-      final cellA = cells[Side.a];
-      final cellB = cells[Side.b];
-      final splitX = cellA == null || cellB == null
-          ? size.width / 2
-          : (cellA.left <= cellB.left ? cellA.right : cellB.right);
-      baseX = (splitX - _driftWidth / 2).clamp(0.0, size.width - _driftWidth);
-      baseY = (size.height - _driftHeight) / 2;
-    } else {
-      baseX = (size.width - _driftWidth) / 2;
-      baseY = (size.height - _driftHeight) / 2;
-    }
+    final baseX = (size.width - _driftWidth) / 2;
+    final baseY = size.height - _hudMargin - _driftHeight;
 
     Rect candidateAt(double x, double y) => Rect.fromLTWH(
-        x,
-        y.clamp(_hudMargin, math.max(_hudMargin, size.height - _hudMargin - _driftHeight)),
+        x.clamp(0.0, math.max(0.0, size.width - _driftWidth)),
+        y.clamp(_hudMargin,
+            math.max(_hudMargin, size.height - _hudMargin - _driftHeight)),
         _driftWidth,
         _driftHeight);
 
@@ -937,10 +918,10 @@ class _StageState extends ConsumerState<Stage> {
     if (free(base)) return Offset(base.left, base.top);
 
     for (var i = 1; i <= 12; i++) {
-      final down = candidateAt(baseX, baseY + i * step);
-      if (free(down)) return Offset(down.left, down.top);
       final up = candidateAt(baseX, baseY - i * step);
       if (free(up)) return Offset(up.left, up.top);
+      final down = candidateAt(baseX, baseY + i * step);
+      if (free(down)) return Offset(down.left, down.top);
     }
     return Offset(base.left, base.top);
   }

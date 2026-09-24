@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.giordanidev" "\0"
+            VALUE "CompanyName", "Giordani.dev" "\0"
             VALUE "FileDescription", "Video Splitview - Side by side, frame by frame." "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "video-splitview" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.giordanidev. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Giordani.dev. All rights reserved." "\0"
             VALUE "OriginalFilename", "video-splitview.exe" "\0"
             VALUE "ProductName", "Video Splitview" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

@@ -225,6 +225,10 @@ class Strings {
     required this.updateFailed,
     required this.updateDownload,
     required this.updateOpenReleases,
+    required this.updateInstall,
+    required this.updateDownloading,
+    required this.updateInstalling,
+    required this.updateInstallFailed,
   });
 
   final AppLanguage language;
@@ -406,6 +410,10 @@ class Strings {
   final String updateFailed;
   final String updateDownload;
   final String updateOpenReleases;
+  final String updateInstall;
+  final String updateDownloading;
+  final String updateInstalling;
+  final String updateInstallFailed;
 
   static Strings forLanguage(AppLanguage language) => switch (language) {
         AppLanguage.ptBr => ptBr,
@@ -515,7 +523,7 @@ class Strings {
     bufferSmall: 'Pequeno (64 MB)',
     bufferNormal: 'Normal (150 MB)',
     bufferLarge: 'Grande (512 MB)',
-    bufferIndicator: 'Indicador de buffer por lado',
+    bufferIndicator: 'Informação de buffer por vídeo',
     sectionHud: 'Informações sobrepostas',
     hudPosition: 'Posição das informações',
     hudVerticalLabel: 'Posição vertical',
@@ -526,7 +534,7 @@ class Strings {
     hudPosCornerTop: 'Canto superior',
     hudPosCornerBottom: 'Canto inferior',
     syncing: 'Sincronizando...',
-    fpsAlways: 'Mostrar FPS sempre',
+    fpsAlways: 'Mostrar FPS',
     statsOverlay: 'Estatísticas completas por vídeo',
     audioOn: 'com áudio',
     audioNo: 'sem áudio',
@@ -577,13 +585,17 @@ class Strings {
     diagUnavailable: 'indisponível',
     sectionUpdates: 'Atualizações',
     updateCurrent: 'Versão atual',
-    updateCheckNow: 'Verificar atualizações',
+    updateCheckNow: 'Verificar',
     updateChecking: 'A verificar…',
     updateUpToDate: 'Está na versão mais recente.',
     updateAvailable: 'Nova versão disponível',
     updateFailed: 'Não foi possível verificar atualizações.',
     updateDownload: 'Baixar atualização',
-    updateOpenReleases: 'Abrir página de releases',
+    updateOpenReleases: 'Abrir releases',
+    updateInstall: 'Atualizar',
+    updateDownloading: 'A transferir…',
+    updateInstalling: 'A instalar…',
+    updateInstallFailed: 'Não foi possível atualizar.',
   );
 
   static const Strings enUs = Strings(
@@ -688,7 +700,7 @@ class Strings {
     bufferSmall: 'Small (64 MB)',
     bufferNormal: 'Normal (150 MB)',
     bufferLarge: 'Large (512 MB)',
-    bufferIndicator: 'Per-side buffer indicator',
+    bufferIndicator: 'Per-video buffer info',
     sectionHud: 'On-video overlays',
     hudPosition: 'Overlay position',
     hudVerticalLabel: 'Vertical position',
@@ -699,7 +711,7 @@ class Strings {
     hudPosCornerTop: 'Top corner',
     hudPosCornerBottom: 'Bottom corner',
     syncing: 'Syncing...',
-    fpsAlways: 'Always show FPS',
+    fpsAlways: 'Show FPS',
     statsOverlay: 'Full per-video statistics',
     audioOn: 'with audio',
     audioNo: 'no audio',
@@ -750,13 +762,17 @@ class Strings {
     diagUnavailable: 'unavailable',
     sectionUpdates: 'Updates',
     updateCurrent: 'Current version',
-    updateCheckNow: 'Check for updates',
+    updateCheckNow: 'Check',
     updateChecking: 'Checking…',
     updateUpToDate: 'You are on the latest version.',
     updateAvailable: 'A new version is available',
     updateFailed: 'Could not check for updates.',
     updateDownload: 'Download update',
-    updateOpenReleases: 'Open releases page',
+    updateOpenReleases: 'Open releases',
+    updateInstall: 'Update',
+    updateDownloading: 'Downloading…',
+    updateInstalling: 'Installing…',
+    updateInstallFailed: 'Could not update.',
   );
 
   static const Strings esEs = Strings(
@@ -861,7 +877,7 @@ class Strings {
     bufferSmall: 'Pequeño (64 MB)',
     bufferNormal: 'Normal (150 MB)',
     bufferLarge: 'Grande (512 MB)',
-    bufferIndicator: 'Indicador de búfer por lado',
+    bufferIndicator: 'Información de búfer por vídeo',
     sectionHud: 'Información superpuesta',
     hudPosition: 'Posición de la información',
     hudVerticalLabel: 'Posición vertical',
@@ -872,7 +888,7 @@ class Strings {
     hudPosCornerTop: 'Esquina superior',
     hudPosCornerBottom: 'Esquina inferior',
     syncing: 'Sincronizando...',
-    fpsAlways: 'Mostrar FPS siempre',
+    fpsAlways: 'Mostrar FPS',
     statsOverlay: 'Estadísticas completas por vídeo',
     audioOn: 'con audio',
     audioNo: 'sin audio',
@@ -923,13 +939,17 @@ class Strings {
     diagUnavailable: 'no disponible',
     sectionUpdates: 'Actualizaciones',
     updateCurrent: 'Versión actual',
-    updateCheckNow: 'Buscar actualizaciones',
+    updateCheckNow: 'Buscar',
     updateChecking: 'Comprobando…',
     updateUpToDate: 'Estás en la versión más reciente.',
     updateAvailable: 'Nueva versión disponible',
     updateFailed: 'No se pudieron buscar actualizaciones.',
     updateDownload: 'Descargar actualización',
-    updateOpenReleases: 'Abrir página de versiones',
+    updateOpenReleases: 'Abrir releases',
+    updateInstall: 'Actualizar',
+    updateDownloading: 'Descargando…',
+    updateInstalling: 'Instalando…',
+    updateInstallFailed: 'No se pudo actualizar.',
   );
 }
 

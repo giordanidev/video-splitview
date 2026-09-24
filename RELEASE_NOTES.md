@@ -1,10 +1,29 @@
-# Video Splitview v0.0.48
+# Video Splitview v0.0.49
 
 **Side by side, frame by frame.**
 
 Desktop video comparison for Windows and Linux — 100% Flutter, powered by the
 **libmpv** engine (via `media_kit`). UI and video are composed in the same Flutter
 scene, with no overlapping native layers.
+
+## What's new in v0.0.49
+
+- **Auto-update**: Settings now always shows an **Update** button (disabled until a new
+  version is published). When pressed it downloads the matching release asset — the
+  Windows installer or the Linux AppImage — and applies it: on Windows it launches the
+  installer and quits so the files can be replaced; on Linux the AppImage is swapped in
+  place and relaunched. The download URL is built straight from the version, so it does
+  **not** hit the rate-limited GitHub API (the API is only a fallback).
+- **Update check** reads a tiny `version.json` manifest from several sources in order
+  (release asset → jsDelivr CDN → raw `main` → GitHub API), so it keeps working even
+  when one source is unavailable.
+- **Settings reorganised**: removed the video-count, view, split-layout and Blink
+  controls that already live in the bottom bar; the drift meter and the per-video buffer
+  info moved into the on-video overlays; the hold-speed slider moved into Playback;
+  labels tidied (`Mostrar FPS`, `Informação de buffer por vídeo`, `Verificar`,
+  `Abrir releases`).
+- **Desync meter** is now centered at the bottom of the view.
+- Publisher metadata is now **Giordani.dev**.
 
 ## Highlights
 
@@ -111,11 +130,11 @@ scene, with no overlapping native layers.
 
 | Artifact | Platform | Notes |
 | --- | --- | --- |
-| `video-splitview-v0.0.48-windows-x64-setup.exe` | Windows 10/11 x64 | Installer (Inno Setup) |
-| `video-splitview-v0.0.48-windows-x64-portable.zip` | Windows 10/11 x64 | Portable — unzip and run `video-splitview.exe` |
-| `video-splitview-v0.0.48-ubuntu-x64.deb` | Debian / Ubuntu x64 | `sudo dpkg -i <file>.deb` |
-| `video-splitview-v0.0.48-fedora-x64.rpm` | Fedora / RHEL x64 | `sudo dnf install <file>.rpm` |
-| `video-splitview-v0.0.48-linux-x64.AppImage` | Linux x64 | Portable; needs GTK3/X11 on the host |
+| `video-splitview-v0.0.49-windows-x64-setup.exe` | Windows 10/11 x64 | Installer (Inno Setup) |
+| `video-splitview-v0.0.49-windows-x64-portable.zip` | Windows 10/11 x64 | Portable — unzip and run `video-splitview.exe` |
+| `video-splitview-v0.0.49-ubuntu-x64.deb` | Debian / Ubuntu x64 | `sudo dpkg -i <file>.deb` |
+| `video-splitview-v0.0.49-fedora-x64.rpm` | Fedora / RHEL x64 | `sudo dnf install <file>.rpm` |
+| `video-splitview-v0.0.49-linux-x64.AppImage` | Linux x64 | Portable; needs GTK3/X11 on the host |
 
 The Windows portable and installer are self-contained (`libmpv-2.dll` is bundled).
 The `.deb`/`.rpm` use the system `libmpv`; the AppImage bundles libmpv + ffmpeg.

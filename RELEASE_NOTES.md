@@ -1,4 +1,4 @@
-# Video Splitview v0.0.49
+# Video Splitview v0.0.50
 
 **Side by side, frame by frame.**
 
@@ -6,9 +6,38 @@ Desktop video comparison for Windows and Linux — 100% Flutter, powered by the
 **libmpv** engine (via `media_kit`). UI and video are composed in the same Flutter
 scene, with no overlapping native layers.
 
-## What's new in v0.0.49
+## What's new in v0.0.50
 
-- **Auto-update**: Settings now always shows an **Update** button (disabled until a new
+### Full codec support on Windows (the big one)
+
+- **The app now plays practically every format there is.** The `libmpv-2.dll` that
+  `media_kit_libs_windows_video` bundles is compiled with a hand-written codec
+  whitelist (≈67 decoders / ≈50 demuxers), so anything outside it was rejected
+  while probing with `Failed to recognize file format`. That is why **Bink
+  (`.bik`)** — the Aion cutscenes — would not open.
+- The app now builds **its own libmpv** into `third_party/libmpv/` (FFmpeg n7.1.1
+  with **no whitelist**, mpv 0.38.0) and installs it over the plugin's copy. It
+  stays **LGPL v3**, and it is self-contained (the dependencies are linked
+  statically from MSYS2).
+- Newly playable on Windows, among many others: **Bink** (`.bik`/`.bkc`), **ProRes**,
+  **DNxHD/DNxHR**, **DV**, **DPX**, uncompressed 8/10/12/16-bit (`r210`, `v210`),
+  **MXF**, **image sequences** (`frame%04d.png`), **VobSub**, **VC-1**, **WMV1/2/3**,
+  **MPEG-4 ASP** (`mvc1`/`mvc2`, classic DivX/Xvid), Escape 124/130, Lagarith, DXV,
+  **Indeo 2/3/4/5**, **VP3/VP5/VP7**, Cinepak, FlashSV, AASC, AIC, Flic, QuickTime
+  RLE/Animation, VBN/Dirac, **UT Video**, **HuffYUV**, **FFV1/FFVHuff**, **Snow**,
+  SMUSH (LucasArts), Interplay MVE, VMD, PSX STR, XMV, R3D, DV, animated GIF, and
+  the standalone subtitle formats.
+- `bik` was added to the file dialog filter. Drag & drop and **All files** accept
+  anything else.
+- **Nothing changed on Linux**: the app uses the distribution's `libmpv`, which
+  already has the full codec set.
+- Rebuild the engine at any time with
+  `powershell -ExecutionPolicy Bypass -File tool/build_libmpv_windows.ps1`
+  (needs MSYS2). See `docs/ARCHITECTURE.md`.
+
+### Also in v0.0.50
+
+- **Auto-update**: Settings always shows an **Update** button (disabled until a new
   version is published). When pressed it downloads the matching release asset — the
   Windows installer or the Linux AppImage — and applies it: on Windows it launches the
   installer and quits so the files can be replaced; on Linux the AppImage is swapped in
@@ -130,17 +159,24 @@ scene, with no overlapping native layers.
 
 | Artifact | Platform | Notes |
 | --- | --- | --- |
-| `video-splitview-v0.0.49-windows-x64-setup.exe` | Windows 10/11 x64 | Installer (Inno Setup) |
-| `video-splitview-v0.0.49-windows-x64-portable.zip` | Windows 10/11 x64 | Portable — unzip and run `video-splitview.exe` |
-| `video-splitview-v0.0.49-ubuntu-x64.deb` | Debian / Ubuntu x64 | `sudo dpkg -i <file>.deb` |
-| `video-splitview-v0.0.49-fedora-x64.rpm` | Fedora / RHEL x64 | `sudo dnf install <file>.rpm` |
-| `video-splitview-v0.0.49-linux-x64.AppImage` | Linux x64 | Portable; needs GTK3/X11 on the host |
+| `video-splitview-v0.0.50-windows-x64-setup.exe` | Windows 10/11 x64 | Installer (Inno Setup) |
+| `video-splitview-v0.0.50-windows-x64-portable.zip` | Windows 10/11 x64 | Portable — unzip and run `video-splitview.exe` |
+| `video-splitview-v0.0.50-ubuntu-x64.deb` | Debian / Ubuntu x64 | `sudo dpkg -i <file>.deb` |
+| `video-splitview-v0.0.50-fedora-x64.rpm` | Fedora / RHEL x64 | `sudo dnf install <file>.rpm` |
+| `video-splitview-v0.0.50-linux-x64.AppImage` | Linux x64 | Portable; needs GTK3/X11 on the host |
 
-The Windows portable and installer are self-contained (`libmpv-2.dll` is bundled).
-The `.deb`/`.rpm` use the system `libmpv`; the AppImage bundles libmpv + ffmpeg.
+The Windows portable and installer are self-contained (`libmpv-2.dll` is bundled,
+built with the full FFmpeg codec set). The `.deb`/`.rpm` use the system `libmpv`;
+the AppImage bundles libmpv + ffmpeg.
 
 ## Supported formats
 
-`mp4, m4v, webm, mkv, mov, avi, ogv, ogg, ts, mts, m2ts, 3gp, 3g2, flv, wmv, asf,
-mpg, mpeg, m2v, vob, mxf, rm, rmvb, divx, f4v` (plus **All files**). Decoding is
-handled by libmpv, which ships its own codecs.
+Anything **FFmpeg can demux** — roughly 360 containers. The file dialog filters the
+common `mp4, m4v, webm, mkv, mov, avi, ogv, ogg, ts, mts, m2ts, 3gp, 3g2, flv, wmv,
+asf, mpg, mpeg, m2v, vob, mxf, rm, rmvb, divx, f4v, bik` extensions, but **All files**
+and drag & drop take anything: Bink (`.bik`), ProRes, DNxHD, DV, MXF, VC-1, WMV,
+MPEG-4 ASP, Indeo, Cinepak, QuickTime legacy codecs, image sequences, VobSub,
+standalone subtitles, HLS/DASH, and so on. See the README for the full list.
+
+Not supported: DRM-protected streams (Widevine/FairPlay) and anything FFmpeg itself
+cannot read.

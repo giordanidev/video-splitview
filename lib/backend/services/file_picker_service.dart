@@ -31,6 +31,7 @@ const List<String> videoExtensions = [
   'rmvb',
   'divx',
   'f4v',
+  'bik',
 ];
 
 Future<List<String>> pickVideoPaths(Strings strings) async {

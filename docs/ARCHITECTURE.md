@@ -69,6 +69,39 @@ settle), dual-audio (mutes one side + toast) and `ended` detection. It also samp
 per-side buffer seconds/bytes and video size/codec for the HUD and the statistics
 overlay.
 
+### 3.1 The bundled libmpv (Windows)
+
+`media_kit_libs_windows_video` ships a prebuilt `libmpv-2.dll` whose FFmpeg is
+configured with `--disable-decoders --disable-demuxers --disable-parsers` followed
+by a hand-written whitelist (≈67 decoders, ≈50 demuxers). Everything outside it is
+impossible to play: the file is rejected at probe time with
+`Failed to recognize file format` (Bink `.bik`, ProRes, DNxHD, DV, 10-bit, MXF,
+`image2` sequences, VobSub, VC-1, WMV, MPEG-4 ASP, DivX/MVC, Indeo, VP3/5/7,
+Cinepak, FlashSV, the older QuickTime codecs, ...). Its upstream
+(`media-kit/libmpv-win32-video-build`) only has releases from 2023, all with the
+same whitelist, so upgrading the dependency does not help.
+
+The app therefore builds its own engine into `third_party/libmpv/windows-x64/`:
+
+- **FFmpeg n7.1.1** with no whitelist — every demuxer, decoder, parser and encoder
+  the FFmpeg has (muxers and filters stay restricted, as playback does not need
+  them). `--enable-small`, `--disable-gpl`, `--disable-nonfree` → **LGPL v3**.
+- **mpv 0.38.0** as a shared `libmpv-2.dll`, built with the same meson options as
+  the media-kit build (`-Degl-angle=enabled`, `-Dvulkan=enabled`, `-Dgpl=false`).
+  ANGLE `EGL`/`KHR` headers are fetched separately because mpv requires them on
+  Windows; current ANGLE dropped `EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE`, so a
+  compat shim is added (dead code — the app uses D3D11/ANGLE, not D3D9).
+- Dependencies come from MSYS2 as **static archives**, so the result is
+  self-contained apart from `libwinpthread-1.dll` and `libshaderc_shared.dll`
+  (from libplacebo), which are shipped next to it.
+- `windows/CMakeLists.txt` installs those DLLs **after** `PLUGIN_BUNDLED_LIBRARIES`
+  so ours overwrites the plugin's copy. Removing the folder falls back to the
+  plugin's libmpv (with a CMake warning).
+
+Rebuild with `powershell -ExecutionPolicy Bypass -File tool/build_libmpv_windows.ps1`
+(needs MSYS2). **Linux needs none of this**: it uses the distribution's `libmpv`,
+which already has the full codec set.
+
 ## 4. Multi-video layout engine
 
 `backend/models/models.dart` defines the layout model:

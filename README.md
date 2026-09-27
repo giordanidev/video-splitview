@@ -158,9 +158,72 @@ AppImage is swapped in place and relaunched. Nothing is applied without pressing
 
 ### Supported formats
 
-The file dialog filters the common `mp4, m4v, webm, mkv, mov, avi, ogv, ogg, ts, mts, m2ts, 3gp, 3g2, flv, wmv, asf, mpg, mpeg, m2v, vob, mxf, rm, rmvb, divx, f4v`
-extensions, plus **All files**. Decoding is handled by libmpv, which brings its own
-codecs — installing system codecs does not change what the app can play.
+Decoding is handled by **libmpv**, which brings its own codecs — installing system
+codecs does not change what the app can play. In practice the app opens **anything
+FFmpeg can demux** (≈360 containers), because on Windows it ships its own libmpv
+built with FFmpeg's full codec set, and on Linux it uses the distribution's
+`libmpv`, which is also complete.
+
+The file dialog only *filters* the most common extensions
+(`mp4, m4v, webm, mkv, mov, avi, ogv, ogg, ts, mts, m2ts, 3gp, 3g2, flv, wmv, asf, mpg, mpeg, m2v, vob, mxf, rm, rmvb, divx, f4v, bik`)
+— pick **All files** or drag & drop anything else.
+
+**Containers**
+
+| Family | Extensions / notes |
+| --- | --- |
+| QuickTime / ISO-BMFF | `mp4` `m4v` `mov` `3gp` `3g2` `m4a` `f4v` `psp` `ism` `mj2` `avif` |
+| Matroska / WebM | `mkv` `mka` `mks` `webm` `mk3d` |
+| MPEG | `ts` `mts` `m2ts` `m2t` `mpg` `mpeg` `m2v` `mpe` `m1v` `vob` raw elementary streams |
+| AVI / divX | `avi` `divx` `div` |
+| Ogg | `ogv` `ogg` `oga` `ogx` `spx` `opus` |
+| ASF / Windows Media | `wmv` `asf` `asx` `wmx` |
+| RealMedia | `rm` `rmvb` `ra` `rmj` |
+| Flash | `flv` `f4v` `swf` |
+| QuickTime legacy | `mov` `qt` with Cinepak, Animation, RLE, `mszh`, `MSS1/2`, `SVQ1/3`, FlashSV, Motion Pixels, RAW/uncompressed (8 and 10-bit 4:2:2) |
+| Broadcast / professional | `mxf` (AVC-Intra, DNxHD, uncompressed) `dv` `dpx` `gxf` `y4m` `raw` `r210` `v210` `r3d` (REDCODE) |
+| Game / legacy formats | **`bik`** (Bink / BIKinetic — the Aion cutscenes) `bkc` `smush` (LucasArts) `ipmovie` (Interplay MVE) `vmd` (Sega) `psxstr` (PlayStation) `xmv` (Xbox) `nsv` `nska` `sol` `mvi` `wsvqa` `paf` `adf` `ivf` `roq` `westwood` `film_cpk` `flic` `mtv` |
+| Image sequences | `image2` — `frame%04d.png/jpg/tiff/bmp/webp/gif`, drag in a single frame to start a sequence |
+| Animation / still | `gif` (animated) `apng` `webp` `png` `jpg` `tiff` `bmp` `ico` `exr` `hdr` `dds` `tga` `qoi` `ppm` `pgm` `pbm` `pnm` |
+| Audio-only containers | `wav` `flac` `aiff` `aif` `au` `snd` `mp1` `mp2` `mp3` `m4a` `aac` `ogg` `opus` `wma` `ape` `wv` `mpc` `tak` `tta` `dts` `thd` (TrueHD) `mka` `alac` `amr` `gsm` `spx` `voc` |
+| Subtitles (standalone) | `srt` `vtt` `ass` `ssa` `sub` `idx` (VobSub) `smi` `mpl2` `jacosub` `realtext` `mpsub` `pjs` `stl` `sami` `txt` `subviewer` `lrc` |
+| Streams / network | `m3u8` (HLS) `mpd` (DASH) `sdp` `rtmp` `rtsp` `http(s)` `ftp` `srt` `rtmps` |
+
+**Video codecs** — H.264/AVC, H.265/HEVC, AV1, VP8, VP9, MPEG-1, MPEG-2, MPEG-4
+(ASP and AVC), **ProRes** (all profiles), **DNxHD/DNxHR**, **DV**, **DPX**,
+**Bink** (`binkvideo`), Interplay MVE, **Motion JPEG**, Motion Pixels, **VC-1**,
+**WMV1/2/3**, MPEG-4 ASP (`mvc1`/`mvc2`, i.e. classic DivX/Xvid), Escape 124/130,
+Lagarith, DXV, MS-CRAM, **Indeo 2/3/4/5**, **VP3 / VP5 / VP7**, Cinepak, FlashSV,
+AASC, AIC, Flic, RLE, QuickTime Animation, VBN / Dirac, **UT Video**, **HuffYUV**,
+**FFV1 / FFVHuff**, **Snow**, Sierra VMD, ZeroCodec, and uncompressed/raw in 8, 9,
+10, 12 and 16 bits (RGB and YUV 4:2:2, incl. `r210`, `v210`).
+
+**Audio codecs** — AAC, MP1/2/3, AC3, E-AC3, **DTS** (incl. XBR/LBR), **TrueHD**,
+Dolby Digital Plus, Opus, Vorbis, FLAC, ALAC, WMA (1/2/Pro/Lossless/Voice),
+AIFF, all PCM variants (8/16/24/32-bit, float, planar, big/little endian, A-law/
+µ-law, Blu-ray/DVD), ~60 ADPCM variants, AMR-NB/WB, G.711, G.726, Speex, WavPack,
+TAK, TTA, APE, Monkey's Audio, Shorten, DSD, Cook, RKA, **Bink Audio**, Interplay
+ACM, RealAudio, iLBC, QCELP, EVRC, WMA Voice, XMA.
+
+**Subtitles** — embedded tracks are rendered: ASS/SSA, SubRip, WebVTT, PJS,
+`mov_text`, MicroDVD, SubViewer, DVD/Blender, HDMV PGS, VobSub, DVB, PGS.
+
+**What is not supported** — anything FFmpeg itself cannot read, which is very
+little. DRM-protected streams (Widevine/FairPlay, e.g. most commercial HLS/DASH)
+and hardware that needs a codec FFmpeg does not implement.
+
+#### Why the app ships its own libmpv (Windows)
+
+The DLL bundled by `media_kit_libs_windows_video` is compiled with a small codec
+whitelist and **cannot open Bink** (`.bik`), ProRes, DNxHD, DV, 10-bit, MXF, image
+sequences, VobSub, VC-1, WMV, MPEG-4 ASP, DivX/MVC, Indeo, Cinepak, FlashSV or the
+older QuickTime codecs — the file is rejected while probing with
+`Failed to recognize file format`. The app therefore builds its own engine into
+`third_party/libmpv/` (FFmpeg with no whitelist, still **LGPL**) and installs it
+over the plugin's copy. On Linux none of this is needed: the app uses the
+distribution's `libmpv`, which already has the full codec set. See
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
+`tool/build_libmpv_windows.ps1` to rebuild it.
 
 ### Shortcuts
 
@@ -229,9 +292,16 @@ Everything else on Linux (**clang, cmake, ninja, pkg-config, GTK3 dev, libmpv de
 libepoxy, patchelf, dpkg-dev/rpm-build, the native Flutter SDK and appimagetool**)
 is installed automatically by `tool/linux/setup_env.sh` the first time you build.
 
-You do **not** need to install mpv, GStreamer or codecs: on Windows
-`libmpv-2.dll` is bundled by `media_kit_libs_windows_video`, and on Linux the
-installer depends on the system `libmpv` (the AppImage bundles it).
+You do **not** need to install mpv, GStreamer or codecs: on Windows `libmpv-2.dll`
+ships in `third_party/libmpv/` (see [Supported formats](#supported-formats)), and on
+Linux the installer depends on the system `libmpv` (the AppImage bundles it).
+
+To **rebuild** the bundled `libmpv` you need [MSYS2](https://www.msys2.org); the
+script installs every other dependency by itself:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tool\build_libmpv_windows.ps1
+```
 
 ### Quick start (Windows)
 

@@ -8,3 +8,4 @@ tool/linux/*.sh text eol=lf
 *.ttf binary
 *.zip binary
 *.tar.gz binary
+*.dll binary

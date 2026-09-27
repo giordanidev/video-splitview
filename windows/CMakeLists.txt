@@ -87,6 +87,26 @@ if(PLUGIN_BUNDLED_LIBRARIES)
     COMPONENT Runtime)
 endif()
 
+# === libmpv próprio ===
+# O `media_kit_libs_windows_video` traz um libmpv pré-compilado cujo FFmpeg foi
+# construído com uma whitelist de codecs (sem Bink, ProRes, DNxHD, MXF, image2,
+# VobSub, VC-1, WMV, ProRes, codecs legados QuickTime, etc.). O DLL em
+# `third_party/libmpv` é compilado por nós (tool/build_libmpv_windows.sh) com o
+# codec set completo do FFmpeg, mantendo LGPL, e tem de ser copiado a seguir para
+# sobrepor o do plugin. Ver docs/ARCHITECTURE.md.
+set(VIDEO_SPLITVIEW_LIBMPV_DIR
+  "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libmpv/windows-x64")
+file(GLOB VIDEO_SPLITVIEW_LIBMPV_FILES "${VIDEO_SPLITVIEW_LIBMPV_DIR}/*.dll")
+if(VIDEO_SPLITVIEW_LIBMPV_FILES)
+  install(FILES ${VIDEO_SPLITVIEW_LIBMPV_FILES}
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+else()
+  message(WARNING
+    "third_party/libmpv/windows-x64 vazio: a usar o libmpv do media_kit "
+    "(codec set limitado). Correr tool/build_libmpv_windows.ps1 para o gerar.")
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

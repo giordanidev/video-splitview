@@ -385,6 +385,7 @@ class _DropdownRow<T> extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: DropdownButton<T>(
                 value: value,
+                isExpanded: true,
                 underline: const SizedBox.shrink(),
                 dropdownColor: AppColors.panel2,
                 mouseCursor: SystemMouseCursors.click,
@@ -394,7 +395,11 @@ class _DropdownRow<T> extends StatelessWidget {
                           value: entry.key,
                           child: MouseRegion(
                             cursor: SystemMouseCursors.click,
-                            child: Text(entry.value),
+                            child: Text(
+                              entry.value,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ))
                     .toList(),
@@ -530,6 +535,7 @@ class _LanguageRow extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: DropdownButton<AppLanguage>(
                 value: value,
+                isExpanded: true,
                 underline: const SizedBox.shrink(),
                 dropdownColor: AppColors.panel2,
                 borderRadius: BorderRadius.circular(10),
@@ -545,7 +551,13 @@ class _LanguageRow extends StatelessWidget {
                               children: [
                                 FlagIcon(language: language),
                                 const SizedBox(width: 8),
-                                Text('${language.label} (${language.code})'),
+                                Flexible(
+                                  child: Text(
+                                    '${language.label} (${language.code})',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ],
                             ),
                           ),

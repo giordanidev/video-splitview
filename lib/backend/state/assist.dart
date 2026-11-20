@@ -37,11 +37,11 @@ class AssistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> verify(PlaybackBridge bridge) async {
+  Future<void> verify(PlaybackBridge bridge, Strings strings) async {
     busy = true;
     notifyListeners();
     try {
-      engine = await bridge.engineInfo();
+      engine = await bridge.engineInfo(strings);
       feedback = engine!.message;
     } catch (error) {
       feedback = '$error';
@@ -55,7 +55,7 @@ class AssistController extends ChangeNotifier {
     busy = true;
     notifyListeners();
     try {
-      engine = await bridge.engineInfo();
+      engine = await bridge.engineInfo(strings);
       await Clipboard.setData(
         ClipboardData(text: _buildDiagnostic(engine!, strings)),
       );

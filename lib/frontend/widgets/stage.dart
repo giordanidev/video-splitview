@@ -885,7 +885,7 @@ class _StageState extends ConsumerState<Stage> {
     }
 
     if (showDrift) {
-      final drift = _DriftPill(ms: bridge.driftMs);
+      final drift = _DriftPill(ms: bridge.driftMs, label: strings.hudDrift);
       final pos = _avoidDrift(size, occupied);
       widgets.add(Positioned(
         left: pos.dx,
@@ -938,6 +938,7 @@ class _StageState extends ConsumerState<Stage> {
     final fps = showFps ? _sideFramePill(bridge, side, strings) : null;
     final buffer = settings.bufferIndicator
         ? _BufferPill(
+            strings: strings,
             seconds: bridge.bufferSeconds(side),
             bytes: bridge.bufferBytes(side),
             dropped: bridge.droppedFrames(side),
@@ -1012,11 +1013,11 @@ class _StageState extends ConsumerState<Stage> {
         if (buffer >= 0) '${buffer.toStringAsFixed(1)} s',
         if (bufferMem case final bytes?) _fmtBufferMb(bytes),
       ];
-      bufferLabel = 'buffer ${parts.join(' · ')}';
+      bufferLabel = '${strings.hudBuffer} ${parts.join(' · ')}';
     }
     final frameParts = <String>[
       ?bufferLabel,
-      if (dropped != null) 'drop $dropped',
+      if (dropped != null) '${strings.hudDropped} $dropped',
     ];
     final audio = state.muted
         ? strings.mutedLabel
@@ -1062,7 +1063,7 @@ class _StageState extends ConsumerState<Stage> {
               style: mono.copyWith(color: AppColors.teal),
             ),
           Text(
-            'vol ${state.volume.round()}% · $audio',
+            '${strings.hudVolume} ${state.volume.round()}% · $audio',
             style: mono.copyWith(color: AppColors.muted),
           ),
         ],
@@ -1523,10 +1524,13 @@ class _DropZone extends ConsumerWidget {
 /// Pill discreta com buffer (segundos + MB) e drops de um lado.
 class _BufferPill extends StatelessWidget {
   const _BufferPill({
+    required this.strings,
     required this.seconds,
     this.bytes,
     this.dropped,
   });
+
+  final Strings strings;
 
   /// Segundos em cache; negativo = sem dado.
   final double seconds;
@@ -1543,7 +1547,7 @@ class _BufferPill extends StatelessWidget {
     final parts = <String>[
       known ? '${seconds.toStringAsFixed(1)}s' : '—',
       if (bytes != null) _fmtBufferMb(bytes!),
-      if (dropped != null) 'drop $dropped',
+      if (dropped != null) '${strings.hudDropped} $dropped',
     ];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1569,7 +1573,7 @@ class _BufferPill extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'buffer ${parts.join(' · ')}',
+            '${strings.hudBuffer} ${parts.join(' · ')}',
             style: TextStyle(
               fontFamily: AppFonts.mono,
               fontSize: 10,
@@ -1585,14 +1589,15 @@ class _BufferPill extends StatelessWidget {
 /// Pill do medidor de dessincronia entre os lados: rótulo "desync" por cima
 /// e o valor por baixo, centrada na zona escolhida do view.
 class _DriftPill extends StatelessWidget {
-  const _DriftPill({required this.ms});
+  const _DriftPill({required this.ms, required this.label});
 
   final double ms;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final abs = ms.abs();
-    final label = abs >= 10 ? abs.round().toString() : abs.toStringAsFixed(1);
+    final value = abs >= 10 ? abs.round().toString() : abs.toStringAsFixed(1);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -1604,8 +1609,8 @@ class _DriftPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'desync',
-            style: TextStyle(
+            label,
+            style: const TextStyle(
               fontFamily: AppFonts.mono,
               fontSize: 9,
               height: 1.1,
@@ -1614,7 +1619,7 @@ class _DriftPill extends StatelessWidget {
             ),
           ),
           Text(
-            '$label ms',
+            '$value ms',
             style: const TextStyle(
               fontFamily: AppFonts.mono,
               fontSize: 11,

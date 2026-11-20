@@ -13,6 +13,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/painting.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
+import '../i18n/strings.dart';
 import '../models/models.dart';
 import '../services/playback_bridge.dart';
 import '../state/settings.dart';
@@ -300,12 +301,12 @@ Future<void> copyComparisonToClipboard(
   await clipboard.write([item]);
 }
 
-String defaultCaptureName() {
+String _defaultCaptureName(String prefix) {
   final stamp = DateTime.now()
       .toIso8601String()
       .replaceAll(RegExp('[:.]'), '-')
       .substring(0, 19);
-  return 'comparacao-$stamp.png';
+  return '$prefix-$stamp.png';
 }
 
 Future<String?> saveComparisonPng(
@@ -314,11 +315,11 @@ Future<String?> saveComparisonPng(
 ) async {
   final bytes = await _compose(bridge, settings);
   if (bytes == null) return null;
-  final name = defaultCaptureName();
+  final strings = Strings.forLanguage(settings.language);
   final location = await getSaveLocation(
-    suggestedName: name,
-    acceptedTypeGroups: const [
-      XTypeGroup(label: 'Imagem PNG', extensions: ['png']),
+    suggestedName: _defaultCaptureName(strings.captureFilePrefix),
+    acceptedTypeGroups: [
+      XTypeGroup(label: strings.capturePng, extensions: const ['png']),
     ],
   );
   if (location == null) return null;

@@ -28,6 +28,7 @@ class FlagIcon extends StatelessWidget {
           AppLanguage.ptBr => _brazil(),
           AppLanguage.enUs => _usa(),
           AppLanguage.esEs => _spain(),
+          AppLanguage.zhCn => _china(),
         },
       ),
     );
@@ -97,6 +98,28 @@ class FlagIcon extends StatelessWidget {
         Expanded(flex: 2, child: Container(color: const Color(0xFFF1BF00))),
         Expanded(flex: 1, child: Container(color: const Color(0xFFAA151B))),
       ],
+    );
+  }
+
+  Widget _china() {
+    const yellow = Color(0xFFFFDE00);
+    return ColoredBox(
+      color: const Color(0xFFDE2910),
+      child: Stack(
+        children: [
+          Positioned(
+            left: width * 0.06,
+            top: height * 0.09,
+            child: Icon(Icons.star, color: yellow, size: height * 0.33),
+          ),
+          for (final (x, y) in [(.28, .05), (.35, .15), (.35, .29), (.28, .39)])
+            Positioned(
+              left: width * x,
+              top: height * y,
+              child: Icon(Icons.star, color: yellow, size: height * 0.13),
+            ),
+        ],
+      ),
     );
   }
 }

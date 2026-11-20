@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide PlayerState;
 
+import '../i18n/strings.dart';
 import '../models/models.dart';
 import '../state/settings.dart';
 import 'mpv_side.dart';
@@ -1561,14 +1562,14 @@ class PlaybackBridge extends ChangeNotifier {
 
   // --- Motor ---------------------------------------------------------------
 
-  Future<EngineInfo> engineInfo() async {
+  Future<EngineInfo> engineInfo(Strings strings) async {
     final native = _players[Side.a]?.native;
     if (native == null) {
-      return const EngineInfo(
+      return EngineInfo(
         found: false,
         ok: false,
         bundled: false,
-        message: 'O motor ainda não está inicializado.',
+        message: strings.engineNotInitialized,
       );
     }
     try {
@@ -1580,15 +1581,15 @@ class PlaybackBridge extends ChangeNotifier {
         path: null,
         version: version.isEmpty ? null : version,
         message: version.isEmpty
-            ? 'libmpv respondeu sem versão.'
-            : 'libmpv empacotado (media_kit) a responder.',
+            ? strings.engineNoVersion
+            : strings.engineResponding,
       );
     } catch (error) {
       return EngineInfo(
         found: false,
         ok: false,
         bundled: true,
-        message: 'Falha ao consultar o libmpv: $error',
+        message: '${strings.engineQueryFailed}: $error',
       );
     }
   }

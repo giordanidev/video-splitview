@@ -141,7 +141,9 @@ class AssistModal extends ConsumerWidget {
                     children: [
                       SVTextButton(
                         label: assist.busy ? strings.verifying : strings.verifyEngine,
-                        onPressed: assist.busy ? null : () => assist.verify(bridge),
+                        onPressed: assist.busy
+                            ? null
+                            : () => assist.verify(bridge, strings),
                       ),
                       SVTextButton(
                         label: strings.copyDiagnostic,

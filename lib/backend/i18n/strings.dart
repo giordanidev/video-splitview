@@ -11,7 +11,8 @@ import '../models/models.dart';
 enum AppLanguage {
   ptBr('pt-BR', 'Português', '🇧🇷'),
   enUs('en-US', 'English', '🇺🇸'),
-  esEs('es-ES', 'Español', '🇪🇸');
+  esEs('es-ES', 'Español', '🇪🇸'),
+  zhCn('zh-CN', '简体中文', '🇨🇳');
 
   const AppLanguage(this.code, this.label, this.flag);
 
@@ -23,6 +24,8 @@ enum AppLanguage {
         AppLanguage.ptBr => const Locale('pt', 'BR'),
         AppLanguage.enUs => const Locale('en', 'US'),
         AppLanguage.esEs => const Locale('es', 'ES'),
+        AppLanguage.zhCn => const Locale.fromSubtags(
+            languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
       };
 
   String get id => code;
@@ -32,6 +35,7 @@ enum AppLanguage {
         'pt-BR' || 'ptBr' || 'pt' => AppLanguage.ptBr,
         'es-ES' || 'esEs' || 'es' => AppLanguage.esEs,
         'en-US' || 'enUs' || 'en' => AppLanguage.enUs,
+        'zh-CN' || 'zhCn' || 'zh' => AppLanguage.zhCn,
         _ => AppLanguage.enUs,
       };
 
@@ -48,6 +52,10 @@ enum AppLanguage {
             return AppLanguage.esEs;
           case 'en':
             return AppLanguage.enUs;
+          case 'zh' when locale.scriptCode == 'Hans' ||
+              (locale.scriptCode == null &&
+                  !const {'TW', 'HK', 'MO'}.contains(locale.countryCode)):
+            return AppLanguage.zhCn;
         }
       }
     } catch (_) {}
@@ -58,6 +66,16 @@ enum AppLanguage {
 class Strings {
   const Strings({
     required this.language,
+    required this.hudBuffer,
+    required this.hudDropped,
+    required this.hudVolume,
+    required this.hudDrift,
+    required this.engineNotInitialized,
+    required this.engineNoVersion,
+    required this.engineResponding,
+    required this.engineQueryFailed,
+    required this.capturePng,
+    required this.captureFilePrefix,
     required this.noVideo,
     required this.open,
     required this.change,
@@ -232,6 +250,16 @@ class Strings {
   });
 
   final AppLanguage language;
+  final String hudBuffer;
+  final String hudDropped;
+  final String hudVolume;
+  final String hudDrift;
+  final String engineNotInitialized;
+  final String engineNoVersion;
+  final String engineResponding;
+  final String engineQueryFailed;
+  final String capturePng;
+  final String captureFilePrefix;
 
   final String noVideo;
   final String open;
@@ -419,10 +447,21 @@ class Strings {
         AppLanguage.ptBr => ptBr,
         AppLanguage.enUs => enUs,
         AppLanguage.esEs => esEs,
+        AppLanguage.zhCn => zhCn,
       };
 
   static const Strings ptBr = Strings(
     language: AppLanguage.ptBr,
+    hudBuffer: 'buffer',
+    hudDropped: 'drop',
+    hudVolume: 'vol',
+    hudDrift: 'desync',
+    engineNotInitialized: 'O motor ainda não está inicializado.',
+    engineNoVersion: 'libmpv respondeu sem versão.',
+    engineResponding: 'libmpv empacotado (media_kit) a responder.',
+    engineQueryFailed: 'Falha ao consultar o libmpv',
+    capturePng: 'Imagem PNG',
+    captureFilePrefix: 'comparacao',
     noVideo: 'Sem vídeo',
     open: 'Abrir',
     change: 'Alterar',
@@ -600,6 +639,16 @@ class Strings {
 
   static const Strings enUs = Strings(
     language: AppLanguage.enUs,
+    hudBuffer: 'buffer',
+    hudDropped: 'drop',
+    hudVolume: 'vol',
+    hudDrift: 'desync',
+    engineNotInitialized: 'The video engine is not initialized yet.',
+    engineNoVersion: 'libmpv did not report a version.',
+    engineResponding: 'The bundled libmpv engine (media_kit) is responding.',
+    engineQueryFailed: 'Could not query libmpv',
+    capturePng: 'PNG image',
+    captureFilePrefix: 'comparacao',
     noVideo: 'No video',
     open: 'Open',
     change: 'Change',
@@ -777,6 +826,16 @@ class Strings {
 
   static const Strings esEs = Strings(
     language: AppLanguage.esEs,
+    hudBuffer: 'buffer',
+    hudDropped: 'drop',
+    hudVolume: 'vol',
+    hudDrift: 'desync',
+    engineNotInitialized: 'El motor de vídeo aún no está inicializado.',
+    engineNoVersion: 'libmpv no indicó su versión.',
+    engineResponding: 'El motor libmpv incluido (media_kit) responde.',
+    engineQueryFailed: 'No se pudo consultar libmpv',
+    capturePng: 'Imagen PNG',
+    captureFilePrefix: 'comparacao',
     noVideo: 'Sin vídeo',
     open: 'Abrir',
     change: 'Cambiar',
@@ -950,6 +1009,193 @@ class Strings {
     updateDownloading: 'Descargando…',
     updateInstalling: 'Instalando…',
     updateInstallFailed: 'No se pudo actualizar.',
+  );
+
+  static const Strings zhCn = Strings(
+    language: AppLanguage.zhCn,
+    hudBuffer: '缓冲',
+    hudDropped: '丢帧',
+    hudVolume: '音量',
+    hudDrift: '同步偏差',
+    engineNotInitialized: '播放引擎尚未初始化。',
+    engineNoVersion: 'libmpv 未返回版本信息。',
+    engineResponding: '内置 libmpv 引擎（media_kit）响应正常。',
+    engineQueryFailed: '无法查询 libmpv',
+    capturePng: 'PNG 图像',
+    captureFilePrefix: '对比截图',
+    noVideo: '暂无视频',
+    open: '打开',
+    change: '更换',
+    remove: '移除',
+    removeVideo: '移除视频',
+    muteSide: '将此视频静音',
+    unmuteSide: '取消此视频静音',
+    brandName: 'Video Splitview',
+    slogan: '并排查看，逐帧对比。',
+    dropTitle: '拖入视频，或点击此处选择',
+    dropHint: 'MP4 · WebM · MKV · MOV · AVI · M2TS',
+    repeat: '重播（空格键）',
+    pause: '暂停（空格键）',
+    play: '播放（空格键）',
+    stop: '停止',
+    unmute: '取消静音（M）',
+    mute: '静音（M）',
+    splitWipe: '滑动对比',
+    splitColumns: '分屏对比',
+    toggleOrientation: '选择分屏布局',
+    sectionViews: '显示视频数',
+    viewCountTooltip: '设置同时显示的视频数量',
+    videoCount1: '1 个视频',
+    videoCount2: '2 个视频',
+    videoCount3: '3 个视频',
+    videoCount4: '4 个视频',
+    layoutColumns3: '3 列',
+    layoutRows3: '3 行',
+    layoutTopPair: '上二下一',
+    layoutBottomPair: '上一下二',
+    layoutLeftSingle: '左一右二',
+    layoutLeftPair: '左二右一',
+    layoutColumns4: '4 列',
+    layoutRows4: '4 行',
+    layoutGrid2x2: '2×2 网格',
+    layoutTopTriple: '上三下一',
+    layoutBottomTriple: '上一下三',
+    layoutLeftTriple: '左一右三',
+    layoutRightTriple: '左三右一',
+    blink: '交替对比（A ↔ B）',
+    fullscreen: '全屏（F）',
+    copyImage: '复制对比截图',
+    saveImage: '保存对比截图（PNG）',
+    settings: '设置',
+    copiedImage: '已将截图复制到剪贴板。',
+    copyImageFailed: '无法复制截图。',
+    savedImage: '已保存对比截图（PNG）。',
+    saveImageFailed: '无法保存对比截图。',
+    dualAudio: '另一个视频正在输出声音，已将此视频静音。',
+    blinkTitle: '交替对比',
+    letterPosition: 'A/B 标记位置',
+    posTop: '顶部',
+    posCenter: '居中',
+    posBottom: '底部',
+    posLeft: '左侧',
+    posRight: '右侧',
+    posCorner: '角落',
+    close: '关闭',
+    sectionView: '对比方式（关闭交替对比时）',
+    wipe: '滑动对比',
+    wipeHint: '叠放视频，拖动分隔线查看两侧',
+    columns: '分屏对比',
+    columnsHint: '在各自的分屏区域显示视频',
+    rotateFrames: '轮换视频位置',
+    rotateVideo: '旋转此视频',
+    rotateVideos: '旋转所有视频',
+    sectionOrientation: '分屏布局',
+    vertical: '纵向分隔',
+    verticalHint: '左右并排',
+    horizontal: '横向分隔',
+    horizontalHint: '上下排列',
+    blinkToggle: '交替显示 A 和 B（暂时忽略分屏布局）',
+    blinkInterval: '交替间隔',
+    holdSpeed: '长按方向键时的步进速度',
+    sectionPerf: '性能与画质',
+    scaler: '视频缩放算法',
+    scalerBilinear: '双线性（开销最低）',
+    scalerBicubic: '双三次（均衡）',
+    scalerLanczos: 'Lanczos（画质优先）',
+    videoSync: '视频同步',
+    syncAudio: '以音频为准（默认）',
+    syncResample: '按显示刷新率重采样（更流畅）',
+    syncDesync: '关闭音视频同步（降低 GPU 开销）',
+    hwdec: '硬件解码',
+    hwdecOff: '关闭（软件解码）',
+    hwdecCompat: '兼容模式（auto-copy）',
+    hwdecDirect: '直连模式（Windows 上使用 auto-copy）',
+    framedrop: '丢弃来不及显示的帧（framedrop）',
+    interpolation: '运动插帧',
+    playbackRate: '播放速度',
+    sectionPlayback: '播放',
+    frameStepCount: '方向键步进帧数',
+    stepFrames1: '1 帧',
+    stepFrames2: '2 帧',
+    stepFrames5: '5 帧',
+    driftMeter: '同步偏差（Δ A ↔ B）',
+    bufferProfile: '缓冲大小',
+    bufferSmall: '小（64 MB）',
+    bufferNormal: '中（150 MB）',
+    bufferLarge: '大（512 MB）',
+    bufferIndicator: '显示各视频的缓冲信息',
+    sectionHud: '画面叠加信息',
+    hudPosition: '叠加信息位置',
+    hudVerticalLabel: '垂直位置',
+    hudHorizontalLabel: '水平位置',
+    hudPosTop: '顶部',
+    hudPosBottom: '底部',
+    hudPosCenter: '居中',
+    hudPosCornerTop: '上方角落',
+    hudPosCornerBottom: '下方角落',
+    syncing: '正在同步…',
+    fpsAlways: '显示帧率',
+    statsOverlay: '显示各视频的详细统计',
+    audioOn: '有音轨',
+    audioNo: '无音轨',
+    mutedLabel: '已静音',
+    rememberWindowState: '记住窗口大小和位置',
+    sectionWindow: '窗口',
+    settingsNote:
+        '方向键：按设置步进 1、2 或 5 帧。Shift + 方向键：跳转 1 秒。Ctrl + 方向键：跳转 5 秒。Windows 上的 media_kit 使用回拷解码（不支持零拷贝）。',
+    languageLabel: '语言',
+    assistTitle: '无法播放此视频',
+    assistFallback: '播放引擎无法打开此文件。',
+    assistNote:
+        '本应用通过 media_kit 使用 libmpv 播放引擎。Windows 版的解码器由 libmpv DLL 提供，安装系统解码器通常无法解决播放问题。',
+    verifyEngine: '检查播放引擎',
+    verifying: '正在检查…',
+    copyDiagnostic: '复制诊断信息',
+    chooseAnother: '选择其他文件',
+    engineLabel: '播放引擎',
+    engineOk: '正常',
+    engineProblem: '有异常',
+    engineBundled: '内置',
+    runtimeAlert: 'libmpv 不可用',
+    frame: '帧',
+    dialogTitle: '选择视频',
+    filterVideo: '视频文件',
+    filterAll: '所有文件',
+    sideA: 'A（左侧）',
+    sideB: 'B（右侧）',
+    sideC: 'C',
+    sideD: 'D',
+    diagTitle: 'Video Splitview 播放诊断',
+    diagDate: '日期',
+    diagSide: '视频位置',
+    diagFile: '文件',
+    diagPath: '文件路径',
+    diagCode: '错误代码',
+    diagEngineMessage: '引擎消息',
+    diagEngineFound: '已找到 libmpv 引擎',
+    diagEngineBundled: '是否为内置引擎',
+    diagEnginePath: '引擎路径',
+    diagEngineVersion: '引擎版本',
+    diagEngineState: '引擎状态',
+    diagUnknown: '（未知）',
+    diagNotAvailable: '（无数据）',
+    diagYes: '是',
+    diagNo: '否',
+    diagOk: '正常',
+    diagUnavailable: '不可用',
+    sectionUpdates: '软件更新',
+    updateCurrent: '当前版本',
+    updateCheckNow: '检查更新',
+    updateChecking: '正在检查更新…',
+    updateUpToDate: '当前已是最新版本。',
+    updateAvailable: '发现新版本',
+    updateFailed: '无法检查更新。',
+    updateDownload: '下载更新',
+    updateOpenReleases: '打开发布页面',
+    updateInstall: '立即更新',
+    updateDownloading: '正在下载…',
+    updateInstalling: '正在安装…',
+    updateInstallFailed: '无法安装更新。',
   );
 }
 
